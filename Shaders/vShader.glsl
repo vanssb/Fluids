@@ -1,18 +1,18 @@
-#ifdef GL_ES
-// Set default precision to medium
-precision mediump int;
-precision mediump float;
-#endif
-
-attribute highp vec4 vertex;
-attribute highp vec2 uv;
-
 uniform mediump mat4 MVP;
+uniform mediump mat4 M;
 
-varying highp vec2 uvOut;
+attribute highp vec3 vertexPos;
+attribute highp vec2 vertexUV;
+attribute highp vec3 vertexNorm;
+
+varying lowp vec3 fragmentPos;
+varying lowp vec3 fragmentNorm;
+varying lowp vec2 fragmentUV;
 
 void main()
 {
-    gl_Position = MVP * vertex;
-    uvOut = uv;
+    fragmentUV = vertexUV;
+    fragmentNorm = (M * vec4(vertexNorm, 0)).xyz;
+    fragmentPos = (M * vec4(vertexPos, 1)).xyz;
+    gl_Position = MVP * vec4(vertexPos, 1);
 }

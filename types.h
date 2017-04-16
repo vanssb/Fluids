@@ -16,6 +16,7 @@ struct VertexData
 {
     QVector3D position;
     QVector2D uv;
+    QVector3D normal;
 };
 
 struct ObjectData{

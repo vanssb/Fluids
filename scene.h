@@ -22,7 +22,7 @@ private:
     QBasicTimer timer;
     QMatrix4x4 mMatrix;
     QMatrix4x4 pMatrix;
-
+    void setLightSettings();
     QMap<QString,ObjectData> data;
     void drawObjects();
     void drawMap();

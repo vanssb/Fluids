@@ -34,12 +34,32 @@ void Scene::initializeGL(){
     fShader.compileSourceFile(":/Shaders/fShader.glsl");
     program.addShader(&vShader);
     program.addShader(&fShader);
-    program.link();
+    if ( !program.link() )
+    {
+        qWarning( "Error: unable to link a shader program." );
+        return;
+    }
     //Linking attributes
-    attributes["vertex"] = program.attributeLocation("vertex");
-    attributes["uv"] = program.attributeLocation("uv");
+    attributes["fragmentPos"] = program.attributeLocation("vertexPos");
+    attributes["fragmentUV"] = program.attributeLocation("vertexUV");
+    attributes["fragmentNorm"] = program.attributeLocation("vertexNorm");
+
     attributes["MVP"] = program.uniformLocation("MVP");
-    attributes["uvUniform"] = program.uniformLocation("uvUniform");
+    attributes["M"] = program.uniformLocation( "M" );
+
+    attributes["textureUniform"] = program.uniformLocation("textureUniform");
+
+    attributes["cameraPosUniform"] = program.uniformLocation( "cameraPos" );
+
+    attributes["pointUniform"] = program.uniformLocation( "pointLight.position" );
+    attributes["pointColorUniform"] = program.uniformLocation( "pointLight.color" );
+    attributes["pointAmbientUniform"] = program.uniformLocation( "pointLight.ambientIntensity" );
+    attributes["pointDiffuseUniform"] = program.uniformLocation( "pointLight.diffuseIntensity" );
+    attributes["pointSpecularUniform"] = program.uniformLocation( "pointLight.specularIntensity" );
+
+    attributes["materialSpecularFactorUniform"] = program.uniformLocation( "materialSpecularFactor" );
+    attributes["materialEmissionUniform"] = program.uniformLocation( "materialEmission" );
+
     //Loading model for borders
     //Loader::loadModel(QString(QCoreApplication::applicationDirPath()+"/Models/Cube.obj"), mapVBO,mapVAO,mapUVs);
     // Preparing VBOs and loading data
@@ -65,6 +85,7 @@ void Scene::initializeGL(){
     indexBuffer->allocate(index.data(), index.size() * sizeof(GLushort) );
     // Map
     // Loading model
+    /*
     Loader::loadModel(QString(QCoreApplication::applicationDirPath()+"/Models/Map.obj"), vertex,index);
     data["map"].vertex = vertex;
     data["map"].index = index;
@@ -81,6 +102,7 @@ void Scene::initializeGL(){
     // Memory allocating for indexes
     indexBuffer->bind();
     indexBuffer->allocate(index.data(), index.size() * sizeof(GLushort) );
+    */
     //Loading common texture
     QImage image(QCoreApplication::applicationDirPath()+"/Textures/Common.jpg" );
     texture = new QOpenGLTexture( image.mirrored() );
@@ -91,6 +113,9 @@ void Scene::initializeGL(){
     glEnable(GL_CULL_FACE);
     // Setting clear color
     glClearColor(0.0f,0.0f,0.0f,0.0f);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_POLYGON);
+
     timer.start(12,this);
 }
 
@@ -98,11 +123,14 @@ void Scene::paintGL(){
     time.start();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    program.bind();
+    if ( !program.bind() ){
+        qWarning("Cant bind shader program");
+        return;
+    }
     texture->bind();
 
     drawObjects();
-    drawMap();
+    //drawMap();
 
     texture->release();
     program.release();
@@ -121,7 +149,6 @@ void Scene::resizeGL(int w, int h){
 }
 
 void Scene::drawObjects(){
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     std::vector<Particle*> objects = engine.getObjectsData();
 
@@ -134,18 +161,27 @@ void Scene::drawObjects(){
         mMatrix.setToIdentity();
         mMatrix.translate(objects[i]->getPosition());
         mMatrix.scale(objects[i]->getRadius());
+
         program.setUniformValue( attributes["MVP"], pMatrix * camera.getMatrix() * mMatrix );
-        program.setUniformValue( attributes["uvUniform"], 0 );
+        program.setUniformValue( attributes["M"], mMatrix );
+        program.setUniformValue( attributes["textureUniform"], 0 );
+
+        setLightSettings();
 
         quintptr offset = 0;
 
-        program.enableAttributeArray( attributes["vertex"] );
-        program.setAttributeBuffer( attributes["vertex"], GL_FLOAT, offset, 3, sizeof(VertexData) );
+        program.enableAttributeArray( attributes["vertexPos"] );
+        program.setAttributeBuffer( attributes["vertexPos"], GL_FLOAT, offset, 3, sizeof(VertexData) );
 
         offset += sizeof(QVector3D);
 
-        program.enableAttributeArray( attributes["uv"]);
-        program.setAttributeBuffer( attributes["uv"], GL_FLOAT, offset, 2, sizeof(VertexData) );
+        program.enableAttributeArray( attributes["vertexUV"]);
+        program.setAttributeBuffer( attributes["vertexUV"], GL_FLOAT, offset, 2, sizeof(VertexData) );
+
+        offset += sizeof(QVector2D);
+
+        program.enableAttributeArray( attributes["vertexNorm"] );
+        program.setAttributeBuffer( attributes["vertexNorm"], GL_FLOAT, offset, 3, sizeof(VertexData) );
 
         glDrawElements(GL_TRIANGLES, indexSize , GL_UNSIGNED_SHORT, 0);
 
@@ -155,7 +191,7 @@ void Scene::drawObjects(){
 }
 
 void Scene::drawMap(){
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glDisable(GL_CULL_FACE);
     data["map"].vertexBuffer->bind();
     data["map"].indexBuffer->bind();
@@ -164,6 +200,7 @@ void Scene::drawMap(){
     mMatrix.scale(160.0f);
 
     program.setUniformValue( attributes["MVP"], pMatrix * camera.getMatrix() * mMatrix );
+
     program.setUniformValue( attributes["uvUniform"], 0 );
 
     quintptr offset = 0;
@@ -180,4 +217,17 @@ void Scene::drawMap(){
 
     data["map"].vertexBuffer->release();
     data["map"].indexBuffer->release();
+}
+
+void Scene::setLightSettings(){
+    program.setUniformValue( attributes["cameraPos"], camera.getPosition() );
+
+    program.setUniformValue( attributes["pointUniform"], QVector3D(0.0f,0.0f,0.0f) );
+    program.setUniformValue( attributes["pointColorUniform"], QVector3D( 1.0f, 1.0f, 1.0f ) );
+    program.setUniformValue( attributes["pointAmbientUniform"], 0.9f );
+    program.setUniformValue( attributes["pointDiffuseUniform"], 1500.0f );
+    program.setUniformValue( attributes["pointSpecularUniform"], 0.5f );
+
+    program.setUniformValue( attributes["materialSpecularFactorUniform"], 1.0f );
+    program.setUniformValue( attributes["materialEmissionUniform"], 0.0f, 0.0f, 0.0f );
 }
