@@ -1,0 +1,36 @@
+#ifndef CAMERA_H
+#define CAMERA_H
+
+#include <QMatrix4x4>
+#include <math.h>
+
+class Camera
+{
+    QVector3D position;
+    QVector3D direction;
+    float hRot;
+    float vRot;
+    float distance;
+    QMatrix4x4 vMatrix;
+    void calculateDirection();
+public:
+    Camera();
+    ~Camera();
+    void setPosition( QVector3D position);
+    void moveForward();
+    void moveBack();
+    void rotateUp();
+    void rotateDown();
+    void rotateRight();
+    void rotateLeft();
+    QMatrix4x4 getMatrix();
+    QVector3D getPosition();
+    float getHorizontalRotation(){
+        return hRot * 180.0f / M_PI;
+    }
+    float getVerticalRotation(){
+        return vRot * 180.0f / M_PI;
+    }
+};
+
+#endif // CAMERA_H
