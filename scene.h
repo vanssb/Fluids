@@ -12,8 +12,9 @@
 #include <QThread>
 
 #include <QOpenGLFunctions>
+#include <QOpenGLFunctions_4_5_Core>
 
-class Scene : public QOpenGLWidget, protected QOpenGLFunctions{
+class Scene : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core{
     Q_OBJECT
 private:
     QOpenGLShaderProgram program;
@@ -28,11 +29,20 @@ private:
     void drawMap();
     QTime time;
     QThread thread;
+    std::vector<QMatrix4x4> mMatrixes;
+    QOpenGLBuffer* mMatrixesBuffer;
+    //QOpenGLVertexArrayObject* vao;
+//Light settings
+    QVector3D color;
+    float ambient;
+    float diffuse;
+    float specular;
 public:
     explicit Scene(QWidget* parent);
     ~Scene();
     Engine engine;
     Camera camera;
+
 protected:
     void paintGL();
     void initializeGL();
@@ -40,6 +50,13 @@ protected:
     void timerEvent(QTimerEvent *);
 signals:
     void renderTimeChanged(int msec);
+public slots:
+    void setAmbient(int ambient);
+    void setDiffuse(int diffuse);
+    void setSpecular(int specular);
+    void setColorR(int red);
+    void setColorG(int green);
+    void setColorB(int blue);
 };
 
 #endif // SCENE_H

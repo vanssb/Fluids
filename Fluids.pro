@@ -10,7 +10,6 @@ QT       += core gui widgets
 TARGET = Fluids
 TEMPLATE = app
 
-LIBS += -lOpenGL32
 
 SOURCES += main.cpp\
         mainwindow.cpp \

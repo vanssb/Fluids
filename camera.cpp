@@ -1,6 +1,6 @@
 #include "camera.h"
 
-Camera::Camera()
+Camera::Camera(QObject* parent) : QObject(parent)
 {
     distance = 1.0f;
 }
@@ -16,26 +16,32 @@ void Camera::setPosition( QVector3D position ){
     direction.setZ( position.x() + distance * sin(vRot) * cos(hRot) );
     direction.setY( position.y() + distance * cos(vRot) );
     direction.setZ( position.z() + distance * sin(vRot) * sin(hRot) );
+    emit anglesChanged();
+    emit positionChanged();
 }
 
 void Camera::moveForward(){
     position = direction;
+    emit positionChanged();
 }
 
 void Camera::moveBack(){
     position.setX( position.x() - distance * sin(vRot) * cos(hRot) );
     position.setY( position.y() - distance * cos(vRot) );
     position.setZ( position.z() - distance * sin(vRot) * sin(hRot) );
+    emit positionChanged();
 }
 
 void Camera::rotateUp() // повернуть сцену вверх
 {
     if (vRot > M_PI / 10) vRot -= 0.02f;
+    emit anglesChanged();
 }
 
 void Camera::rotateDown() // повернуть сцену вниз
 {
     if (vRot < M_PI * 9 / 10) vRot += 0.02f;
+    emit anglesChanged();
 }
 
 void Camera::rotateLeft() // повернуть сцену влево
@@ -45,7 +51,7 @@ void Camera::rotateLeft() // повернуть сцену влево
         hRot -= 0.02f;
     else
         hRot = 2 * M_PI - hRot;
-
+    emit anglesChanged();
 }
 
 void Camera::rotateRight() // повернуть сцену вправо
@@ -54,6 +60,7 @@ void Camera::rotateRight() // повернуть сцену вправо
         hRot += 0.02f;
     else
         hRot = hRot - 2 * M_PI;
+    emit anglesChanged();
 }
 
 QMatrix4x4 Camera::getMatrix(){

@@ -19,6 +19,8 @@ struct VertexData
     QVector3D normal;
 };
 
+
+
 struct ObjectData{
     std::vector<VertexData> vertex;
     std::vector<GLushort> index;

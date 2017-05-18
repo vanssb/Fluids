@@ -19,11 +19,17 @@ private:
     Ui::MainWindow *ui;
     int oldPosX, oldPosY, newPosX, newPosY;
 public slots:
-    void countChanged(int count);
-    void timeChanged(int msec );
+//Moving slots
     void keyPressEvent(QKeyEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+//Slots for basic information updating
+    void countChanged(int count);
+    void timeChanged(int msec );
     void renderTimeChanged(int msec);
+    void basicInformationShow();
+    void lightSettingsShow();
+    void cameraAnglesChanged();
+    void cameraPositionChanged();
 };
 
 #endif // MAINWINDOW_H

@@ -4,8 +4,9 @@
 #include <QMatrix4x4>
 #include <math.h>
 
-class Camera
-{
+class Camera : public QObject{
+    Q_OBJECT
+private:
     QVector3D position;
     QVector3D direction;
     float hRot;
@@ -14,7 +15,7 @@ class Camera
     QMatrix4x4 vMatrix;
     void calculateDirection();
 public:
-    Camera();
+    explicit Camera(QObject *parent = 0);
     ~Camera();
     void setPosition( QVector3D position);
     void moveForward();
@@ -31,6 +32,9 @@ public:
     float getVerticalRotation(){
         return vRot * 180.0f / M_PI;
     }
+signals:
+    void anglesChanged();
+    void positionChanged();
 };
 
 #endif // CAMERA_H
